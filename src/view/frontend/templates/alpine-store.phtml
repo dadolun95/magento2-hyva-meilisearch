@@ -122,6 +122,53 @@
                 },
 
                 async performSearch() {
+                    if (this.meilisearchConfig['catalog_list_mode']) {
+                        return this.performClientSideSearch();
+                    }
+                    return this.performServerSideSearch();
+                },
+
+                async performServerSideSearch() {
+                    this.state.isLoading = true;
+
+                    const params = new URLSearchParams();
+                    params.set('q', this.state.searchQuery || '');
+                    params.set('page', String(this.state.page));
+                    params.set('product_list_limit', String(this.limiterState.perPage));
+                    params.set('product_list_mode', this.viewModeState.mode || this.meilisearchConfig.defaultViewMode || 'grid');
+                    params.set('product_list_dir', this.state.isDescending ? 'desc' : 'asc');
+
+                    if (this.state.sortBy) {
+                        params.set('product_list_order', this.state.sortBy);
+                    }
+
+                    Object.entries(this.state.selectedFacets).forEach(([code, values]) => {
+                        if (values && values.length) {
+                            params.set(code, values.join(','));
+                        }
+                    });
+
+                    try {
+                        const res = await fetch(BASE_URL + 'meilisearch/ajax/products?' + params.toString());
+
+                        if (!res.ok) {
+                            throw new Error('HTTP ' + res.status);
+                        }
+
+                        const json = await res.json();
+
+                        this.updateResults(json);
+                        document.dispatchEvent(new CustomEvent('meilisearch:html-updated', {
+                            detail: { html: json.html || '' }
+                        }));
+                    } catch (e) {
+                        console.error('[Meilisearch] performSearch error', e);
+                    } finally {
+                        this.state.isLoading = false;
+                    }
+                },
+
+                async performClientSideSearch() {
                     this.state.isLoading = true;
 
                     const searchQuery = this.state.searchQuery;
