@@ -16,8 +16,6 @@ $productViewModel         = $viewModels->require(ProductPage::class);
 $productListItemViewModel = $viewModels->require(ProductListItem::class);
 $currentCategoryViewModel = $viewModels->require(CurrentCategory::class);
 
-dd("HERE");
-
 $eagerLoadImagesCount = (int) ($block->getData('eager_load_images_count') ?? 3);
 $productCollection = $block->getLoadedProductCollection();
 
