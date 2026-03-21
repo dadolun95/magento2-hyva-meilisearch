@@ -101,6 +101,7 @@
                     }
 
                     this.isHydrated = true;
+                    document.dispatchEvent(new CustomEvent('meilisearch:initialized'));
                 },
 
                 getHybridParams(query) {
@@ -133,6 +134,9 @@
 
                     const params = new URLSearchParams();
                     params.set('q', this.state.searchQuery || '');
+                    if (window.meilisearchFrontendConfig?.currentCategoryId) {
+                        params.set('category_ids', window.meilisearchFrontendConfig.currentCategoryId);
+                    }
                     params.set('page', String(this.state.page));
                     params.set('product_list_limit', String(this.limiterState.perPage));
                     params.set('product_list_mode', this.viewModeState.mode || this.meilisearchConfig.defaultViewMode || 'grid');
@@ -353,6 +357,11 @@
                         selected[code] = current;
                     } else {
                         delete selected[code];
+                        window.dispatchEvent(new CustomEvent('meilisearch:remove-filter', {
+                            detail: {
+                                filter: code
+                            }
+                        }));
                     }
 
                     this.state.selectedFacets = selected;
@@ -431,6 +440,7 @@
                     this.syncUrl();
                     this.performSearch();
                     window.scrollTo({ top: 0, behavior: 'smooth' });
+                    window.dispatchEvent(new CustomEvent('meilisearch:filters-cleared'));
                 },
 
                 limiterOptions() {

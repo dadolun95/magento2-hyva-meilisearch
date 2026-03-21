@@ -56,7 +56,12 @@ $clientSideRendering = $config['catalog_list_mode'];
                     id="meilisearch-product-list-container"
                     :class="$store.meilisearch.state.isLoading ? 'opacity-50 pointer-events-none transition-opacity duration-200' : ''"
                 >
-                    <?= $block->getChildHtml('meilisearch.search.product.list'); ?>
+                    <?php
+                        $productCollection = $ssr->getProductCollection($searchResult);
+                        $productListBlock = $block->getChildBlock('meilisearch.search.product.list')->setCollection($productCollection);
+                    ?>
+                    <?= $productListBlock->toHtml(); ?>
+
                 </div>
 
                 <div
@@ -208,6 +213,7 @@ $clientSideRendering = $config['catalog_list_mode'];
 <?php if (!$clientSideRendering): ?>
 <script>
     (function () {
+
         var productListContainer = document.getElementById('meilisearch-product-list-container');
 
         document.addEventListener('meilisearch:html-updated', function (event) {
@@ -216,16 +222,22 @@ $clientSideRendering = $config['catalog_list_mode'];
             }
 
             var html = event.detail.html || '';
-            var temp = document.createElement('div');
-            temp.innerHTML = html;
 
-            hyva.activateScripts(temp);
-            productListContainer.innerHTML = temp.innerHTML;
-
-            if (window.Alpine && typeof Alpine.initTree === 'function') {
-                Alpine.initTree(productListContainer);
+            if (window.Alpine && typeof Alpine.destroyTree === 'function') {
+                productListContainer.innerHTML = '';
+                Alpine.destroyTree(productListContainer);
             }
+
+            productListContainer.innerHTML = html;
+            hyva.activateScripts(productListContainer);
+
         });
+
+        <?php if (isset($config['current_category'])): ?>
+        document.addEventListener('meilisearch:initialized', () => {
+            window.meilisearchFrontendConfig.currentCategoryId = <?= (int)$config['current_category']; ?>;
+        });
+        <?php endif; ?>
     })();
 </script>
 <?php else: ?>

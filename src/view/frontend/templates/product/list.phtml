@@ -18,7 +18,6 @@ $currentCategoryViewModel = $viewModels->require(CurrentCategory::class);
 
 $eagerLoadImagesCount = (int) ($block->getData('eager_load_images_count') ?? 3);
 $productCollection = $block->getLoadedProductCollection();
-
 ?>
 <?php if (!$productCollection->count()): ?>
     <div class="message info empty">
